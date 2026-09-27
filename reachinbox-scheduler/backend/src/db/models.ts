@@ -76,7 +76,17 @@ export const Senders = {
       `SELECT * FROM senders WHERE user_id = $1 ORDER BY created_at ASC LIMIT 1`,
       [userId]
     );
-    if (existing.rows[0]) return existing.rows[0];
+    if (existing.rows[0]) {
+  const updated = await pool.query(
+    `UPDATE senders
+     SET max_emails_per_hour = $1,
+         min_delay_ms = $2
+     WHERE id = $3
+     RETURNING *`,
+    [opts.maxEmailsPerHour, opts.minDelayMs, existing.rows[0].id]
+  );
+  return updated.rows[0];
+}
 
     // In a real system each sender would have distinct Ethereal creds.
     // Here we lazily create one Ethereal test account per sender via emailSender.createEtherealAccount().
